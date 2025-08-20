@@ -1,35 +1,95 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState,useEffect } from 'react'
+//import reactLogo from './assets/react.svg'
+//import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [input, setInput] = useState('');
+  const [allarr, setAllarr] = useState([]);
+
+  // Load tasks on first render
+  useEffect(() => {
+    const savedData = localStorage.getItem('taskList');
+    if (savedData) {
+      setAllarr(JSON.parse(savedData));
+    }
+  }, []);
+
+  // Save tasks whenever they change
+  useEffect(() => {
+    localStorage.setItem('taskList', JSON.stringify(allarr));
+  }, [allarr]);
+
+  const handleChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  const handleClick = () => {
+    if (input.trim() !== '') {
+      setAllarr([...allarr, input]);
+      setInput('');
+    } else {
+      alert('Please enter a task');
+    }
+  };
+
+  const handleDelete = (index) => {
+    const arr = [...allarr];
+    arr.splice(index, 1);
+    setAllarr(arr);
+  };
+
+  const handleUpdate = (index) => {
+    const updatedValue = prompt('Enter new value:', allarr[index]);
+    if (updatedValue !== null && updatedValue.trim() !== '') {
+      const arr = [...allarr];
+      arr[index] = updatedValue;
+      setAllarr(arr);
+    } else {
+      alert('Please enter a valid value');
+    }
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Are you sure you want to delete all tasks?')) {
+      setAllarr([]);
+      localStorage.removeItem('taskList');
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h2>Task Manager</h2>
+      <div className="input-area">
+        <input
+          type="text"
+          value={input}
+          onChange={handleChange}
+          placeholder="Enter your task"
+        />
+        <button onClick={handleClick}>Add</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+
+      {allarr.length > 0 && (
+        <>
+          <ul>
+            {allarr.map((item, index) => (
+              <li key={index}>
+                {item}
+                <span className="btn-group">
+                  <button onClick={() => handleUpdate(index)}>Update</button>
+                  <button onClick={() => handleDelete(index)}>Delete</button>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <button className="clear-btn" onClick={handleClearAll}>
+            Clear All Tasks
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default App
